@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import GameCard from "./GameCard";
 import { fetchGameDetail, fetchGamesPage } from "../lib/gamesApi";
-import { readGamesCache, writeGamesCache } from "../lib/gameCache";
+import {
+  readGameDetailCache,
+  readGamesCache,
+  writeGameDetailCache,
+  writeGamesCache,
+} from "../lib/gameCache";
 import type { Game, GameDetail } from "../types/game";
 
 const FIRST_PAGE = 1;
@@ -91,12 +96,22 @@ function MainContent() {
     let isActiveRequest = true;
 
     const loadGameDetail = async () => {
+      const cachedDetail = readGameDetailCache(expandedGame.id);
+
+      if (cachedDetail) {
+        setGameDetail(cachedDetail);
+        setDetailErrorMessage(null);
+        setIsDetailLoading(false);
+        return;
+      }
+
       try {
         const fetchedDetail = await fetchGameDetail(expandedGame.id);
 
         if (isActiveRequest) {
           setGameDetail(fetchedDetail);
           setDetailErrorMessage(null);
+          writeGameDetailCache(fetchedDetail);
         }
       } catch (error) {
         if (isActiveRequest) {
