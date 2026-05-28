@@ -1,10 +1,12 @@
+import type { Game } from "../types/game";
+
 interface Props {
-  title: string;
+  game: Game;
   isExpanded: boolean;
   onClick: () => void;
 }
 
-function GameCard({ title, isExpanded, onClick }: Props) {
+function GameCard({ game, isExpanded, onClick }: Props) {
   return (
     <button
       type="button"
@@ -15,9 +17,18 @@ function GameCard({ title, isExpanded, onClick }: Props) {
       }`}
     >
       <div className="flex h-full min-h-0 flex-col gap-2">
-        <div className="min-h-0 flex-1 rounded-lg border border-[rgba(183,24,112,0.18)] bg-[radial-gradient(circle_at_30%_20%,rgba(183,24,112,0.55),transparent_36%),linear-gradient(135deg,#852C5D,#522B40_52%,#33252D)]" />
+        <div className="min-h-0 flex-1 overflow-hidden rounded-lg border border-[rgba(183,24,112,0.18)] bg-[radial-gradient(circle_at_30%_20%,rgba(183,24,112,0.55),transparent_36%),linear-gradient(135deg,#852C5D,#522B40_52%,#33252D)]">
+          {game.imageUrl && (
+            <img
+              src={game.imageUrl}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          )}
+        </div>
         <h3 className="truncate text-center text-sm font-bold text-[var(--text-h)] sm:text-base">
-          {title}
+          {game.name}
         </h3>
       </div>
     </button>
