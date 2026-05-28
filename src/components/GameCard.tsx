@@ -10,10 +10,8 @@ function GameCard({ title, isExpanded, onClick }: Props) {
       type="button"
       aria-expanded={isExpanded}
       onClick={onClick}
-      className={`aspect-square rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] p-2 text-left shadow-[var(--shadow)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-[rgba(183,24,112,0.42)] focus:outline-none focus:ring-2 focus:ring-[rgba(183,24,112,0.28)] ${
-        isExpanded
-          ? "col-span-2 row-span-2 border-[rgba(183,24,112,0.5)] p-3 sm:col-span-2 lg:col-span-2"
-          : ""
+      className={`aspect-square rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] p-2 text-left shadow-[var(--shadow)] transition duration-150 hover:-translate-y-0.5 hover:border-[rgba(183,24,112,0.42)] focus:outline-none focus:ring-2 focus:ring-[rgba(183,24,112,0.28)] ${
+        isExpanded ? "border-[rgba(183,24,112,0.5)]" : ""
       }`}
     >
       <div className="flex h-full min-h-0 flex-col gap-2">

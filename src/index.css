@@ -57,3 +57,15 @@ body {
         radial-gradient(circle at 54% 88%, rgba(82, 43, 64, 0.26), transparent 42%),
         linear-gradient(135deg, #33252d 0%, #332c30 56%, #522b40 100%);
 }
+
+@keyframes pageExpand {
+    from {
+        opacity: 0;
+        transform: scale(0.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
