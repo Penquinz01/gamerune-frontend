@@ -23,6 +23,19 @@ interface BackendGame {
   short_screenshots?: BackendImage[];
   extraImages?: BackendImage[];
   extraImageUrls?: string[];
+  imageUrls?: string[];
+  screenshotUrls?: string[];
+  backgroundImage?: string;
+  additionalImages?: BackendImage[];
+  imageUrl1?: string;
+  imageUrl2?: string;
+  imageUrl3?: string;
+  image1?: string;
+  image2?: string;
+  image3?: string;
+  screenshot1?: string;
+  screenshot2?: string;
+  screenshot3?: string;
 }
 
 interface BackendImage {
@@ -49,22 +62,77 @@ const getBaseUrl = () =>
   import.meta.env.DEV ? window.location.origin : backendBaseUrl;
 
 const getImageUrl = (game: BackendGame) =>
-  game.imageUrl ?? game.image_url ?? game.coverUrl ?? game.cover_url ?? game.background_image;
+  game.imageUrl ??
+  game.image_url ??
+  game.coverUrl ??
+  game.cover_url ??
+  game.backgroundImage ??
+  game.background_image;
+
+const isImageUrl = (value: string) =>
+  /^https?:\/\//i.test(value) &&
+  /\.(avif|gif|jpe?g|png|webp)(\?|$)/i.test(value);
+
+const collectImageUrls = (value: unknown): string[] => {
+  if (typeof value === "string") {
+    return isImageUrl(value) ? [value] : [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap(collectImageUrls);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.values(value).flatMap(collectImageUrls);
+  }
+
+  return [];
+};
 
 const normalizeImageList = (game: BackendGame) => {
   const imageSources = [
+    game.imageUrl,
+    game.image_url,
+    game.coverUrl,
+    game.cover_url,
+    game.backgroundImage,
+    game.background_image,
+    game.imageUrl1,
+    game.imageUrl2,
+    game.imageUrl3,
+    game.image1,
+    game.image2,
+    game.image3,
+    game.screenshot1,
+    game.screenshot2,
+    game.screenshot3,
     ...(game.extraImageUrls ?? []),
+    ...(game.imageUrls ?? []),
+    ...(game.screenshotUrls ?? []),
     ...(game.screenshots ?? []),
     ...(game.images ?? []),
     ...(game.short_screenshots ?? []),
     ...(game.extraImages ?? []),
+    ...(game.additionalImages ?? []),
   ];
 
-  return imageSources
-    .map((image) =>
-      typeof image === "string" ? image : image.imageUrl ?? image.image ?? image.url,
-    )
-    .filter((imageUrl): imageUrl is string => Boolean(imageUrl));
+  const uniqueImageUrls = new Set(
+    [
+      ...imageSources.map((image) => {
+        if (!image) {
+          return undefined;
+        }
+
+        return typeof image === "string"
+          ? image
+          : image.imageUrl ?? image.image ?? image.url;
+      }),
+      ...collectImageUrls(game),
+    ]
+      .filter((imageUrl): imageUrl is string => Boolean(imageUrl)),
+  );
+
+  return [...uniqueImageUrls];
 };
 
 export const fetchGamesPage = async (page: number, pageSize: number) => {
@@ -103,6 +171,7 @@ export const fetchGameDetail = async (gameId: string) => {
 
   const game = (await response.json()) as BackendGame;
   const coverImageUrl = getImageUrl(game);
+  const imageUrls = normalizeImageList(game);
 
   return {
     id: String(game.id ?? gameId),
@@ -113,8 +182,8 @@ export const fetchGameDetail = async (gameId: string) => {
     rating: game.rating,
     steamAppId: game.steamAppId,
     steamPrice: game.steamPrice,
-    extraImageUrls: normalizeImageList(game).filter(
-      (imageUrl) => imageUrl !== coverImageUrl,
-    ),
+    extraImageUrls: imageUrls
+      .filter((imageUrl) => imageUrl !== coverImageUrl)
+      .slice(0, 2),
   } satisfies GameDetail;
 };

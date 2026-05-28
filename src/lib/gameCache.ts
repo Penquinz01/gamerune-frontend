@@ -3,6 +3,7 @@ import type { Game, GameDetail } from "../types/game";
 const CACHE_TTL_MS = 1000 * 60 * 10;
 const DETAILS_CACHE_KEY = "game-lister:game-details:lru";
 const DETAILS_CACHE_LIMIT = 3;
+const DETAILS_CACHE_VERSION = 3;
 
 interface GamesCacheEntry {
   savedAt: number;
@@ -10,6 +11,7 @@ interface GamesCacheEntry {
 }
 
 interface GameDetailCacheEntry {
+  version?: number;
   gameId: string;
   lastUsedAt: number;
   detail: GameDetail;
@@ -70,13 +72,20 @@ const writeDetailsCacheEntries = (entries: GameDetailCacheEntry[]) => {
 
 export const readGameDetailCache = (gameId: string) => {
   const cacheEntries = readDetailsCacheEntries();
-  const cachedEntry = cacheEntries.find((entry) => entry.gameId === gameId);
+  const currentCacheEntries = cacheEntries.filter(
+    (entry) => entry.version === DETAILS_CACHE_VERSION,
+  );
+  const cachedEntry = currentCacheEntries.find((entry) => entry.gameId === gameId);
 
   if (!cachedEntry) {
+    if (currentCacheEntries.length !== cacheEntries.length) {
+      writeDetailsCacheEntries(currentCacheEntries);
+    }
+
     return null;
   }
 
-  const updatedEntries = cacheEntries.map((entry) =>
+  const updatedEntries = currentCacheEntries.map((entry) =>
     entry.gameId === gameId ? { ...entry, lastUsedAt: Date.now() } : entry,
   );
 
@@ -92,6 +101,7 @@ export const writeGameDetailCache = (detail: GameDetail) => {
   const updatedEntries = [
     ...cacheEntries,
     {
+      version: DETAILS_CACHE_VERSION,
       gameId: detail.id,
       lastUsedAt: Date.now(),
       detail,

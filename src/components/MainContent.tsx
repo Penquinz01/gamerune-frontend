@@ -23,6 +23,7 @@ function MainContent() {
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailErrorMessage, setDetailErrorMessage] = useState<string | null>(null);
   const [isDetailVisible, setIsDetailVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const closeExpandedGame = () => {
     setIsDetailVisible(false);
@@ -34,6 +35,7 @@ function MainContent() {
     setGameDetail(null);
     setIsDetailLoading(true);
     setDetailErrorMessage(null);
+    setSelectedImageIndex(0);
     window.history.pushState({ expandedGameId: game.id }, "", window.location.href);
   };
 
@@ -102,6 +104,7 @@ function MainContent() {
         setGameDetail(cachedDetail);
         setDetailErrorMessage(null);
         setIsDetailLoading(false);
+        setSelectedImageIndex(0);
         return;
       }
 
@@ -111,6 +114,7 @@ function MainContent() {
         if (isActiveRequest) {
           setGameDetail(fetchedDetail);
           setDetailErrorMessage(null);
+          setSelectedImageIndex(0);
           writeGameDetailCache(fetchedDetail);
         }
       } catch (error) {
@@ -140,13 +144,30 @@ function MainContent() {
     ? [
         activeGame.imageUrl,
         ...(gameDetail?.extraImageUrls ?? []),
-      ].filter((imageUrl): imageUrl is string => Boolean(imageUrl))
+      ]
+        .filter((imageUrl): imageUrl is string => Boolean(imageUrl))
+        .slice(0, 3)
     : [];
 
   const priceLabel =
     gameDetail?.steamPrice?.final_formatted ??
     gameDetail?.steamPrice?.initial_formatted ??
     "TBD";
+
+  const selectedImageUrl =
+    galleryImageUrls[selectedImageIndex] ?? galleryImageUrls[0];
+
+  const showPreviousImage = () => {
+    setSelectedImageIndex((currentIndex) =>
+      currentIndex === 0 ? galleryImageUrls.length - 1 : currentIndex - 1,
+    );
+  };
+
+  const showNextImage = () => {
+    setSelectedImageIndex((currentIndex) =>
+      currentIndex === galleryImageUrls.length - 1 ? 0 : currentIndex + 1,
+    );
+  };
 
   return (
     <>
@@ -208,14 +229,67 @@ function MainContent() {
               </button>
             </div>
 
-            <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 sm:grid-cols-[minmax(220px,360px)_1fr] sm:p-6">
-              <div className="aspect-square overflow-hidden rounded-xl border border-[rgba(255,255,255,0.16)] bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.16),transparent_36%),linear-gradient(135deg,#2a2a2a,#171717_52%,#050505)]">
-                {activeGame.imageUrl && (
-                  <img
-                    src={activeGame.imageUrl}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
+            <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 sm:grid-cols-[minmax(260px,420px)_1fr] sm:p-6">
+              <div className="grid content-start gap-3">
+                <div className="relative aspect-square overflow-hidden rounded-xl border border-[rgba(255,255,255,0.16)] bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.16),transparent_36%),linear-gradient(135deg,#2a2a2a,#171717_52%,#050505)]">
+                  {selectedImageUrl && (
+                    <img
+                      key={selectedImageUrl}
+                      src={selectedImageUrl}
+                      alt=""
+                      className="h-full w-full object-cover transition-opacity duration-150"
+                    />
+                  )}
+
+                  {galleryImageUrls.length > 1 && (
+                    <div className="absolute inset-x-3 top-1/2 flex -translate-y-1/2 justify-between">
+                      <button
+                        type="button"
+                        onClick={showPreviousImage}
+                        aria-label="Previous image"
+                        className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-black/70 text-lg text-[var(--text-h)] transition hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.18)]"
+                      >
+                        {"<"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={showNextImage}
+                        aria-label="Next image"
+                        className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-black/70 text-lg text-[var(--text-h)] transition hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.18)]"
+                      >
+                        {">"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {galleryImageUrls.map((imageUrl, imageIndex) => (
+                    <button
+                      key={imageUrl}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(imageIndex)}
+                      aria-label={`Show image ${imageIndex + 1}`}
+                      className={`aspect-video overflow-hidden rounded-lg border bg-[rgba(12,12,12,0.72)] transition focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.18)] ${
+                        selectedImageIndex === imageIndex
+                          ? "border-white"
+                          : "border-[var(--border)] opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
+
+                {galleryImageUrls.length > 1 && (
+                  <p className="text-center text-sm text-[var(--text-muted)]">
+                    {selectedImageIndex + 1} / {galleryImageUrls.length}
+                  </p>
                 )}
               </div>
 
@@ -265,30 +339,14 @@ function MainContent() {
                     </dd>
                   </div>
                 </dl>
-
                 <div className="grid gap-3">
                   <h3 className="text-base font-semibold text-[var(--text-h)]">
-                    Images
+                    Image gallery
                   </h3>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {galleryImageUrls.map((imageUrl) => (
-                      <div
-                        key={imageUrl}
-                        className="aspect-video overflow-hidden rounded-lg border border-[var(--border)] bg-[rgba(12,12,12,0.72)]"
-                      >
-                        <img
-                          src={imageUrl}
-                          alt=""
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    ))}
-                  </div>
                   {gameDetail && gameDetail.extraImageUrls.length === 0 && (
                     <p className="text-sm text-[var(--text-muted)]">
-                      The backend returned the cover image only. Extra images
-                      will appear here when the details endpoint includes them.
+                      The details endpoint returned only one image for this
+                      game.
                     </p>
                   )}
                 </div>
