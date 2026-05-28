@@ -57,3 +57,13 @@ Run lint checks:
 ```bash
 npm run lint
 ```
+
+## Environment Files
+
+The app uses Vite environment variables for backend endpoints.
+
+- `.env` stores shared endpoint path defaults.
+- `.env.local` stores local machine settings and is ignored by Git.
+- `.env.production` stores production endpoint settings.
+
+After changing any env file, restart the Vite dev server so the new values are loaded.
