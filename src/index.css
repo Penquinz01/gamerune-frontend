@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 :root {
-    --text: #ead8e2;
-    --text-muted: #c7aaba;
-    --text-h: #fff5fa;
-    --bg: #332c30;
-    --surface: rgba(51, 37, 45, 0.74);
-    --surface-strong: rgba(51, 44, 48, 0.88);
-    --border: rgba(183, 24, 112, 0.2);
-    --accent: #b71870;
-    --accent-soft: rgba(133, 44, 93, 0.36);
+    --text: #e5e5e5;
+    --text-muted: #a3a3a3;
+    --text-h: #ffffff;
+    --bg: #050505;
+    --surface: rgba(18, 18, 18, 0.84);
+    --surface-strong: rgba(26, 26, 26, 0.94);
+    --border: rgba(255, 255, 255, 0.14);
+    --accent: #ffffff;
+    --accent-soft: rgba(255, 255, 255, 0.1);
     --shadow:
-        rgba(0, 0, 0, 0.22) 0 18px 36px -18px,
-        rgba(183, 24, 112, 0.14) 0 10px 24px -20px;
+        rgba(0, 0, 0, 0.5) 0 18px 36px -18px,
+        rgba(255, 255, 255, 0.08) 0 10px 24px -22px;
 
     --sans: system-ui, "Segoe UI", Roboto, sans-serif;
     --heading: system-ui, "Segoe UI", Roboto, sans-serif;
@@ -52,10 +52,10 @@ body {
 
 .app-shell {
     background:
-        radial-gradient(circle at 16% 12%, rgba(183, 24, 112, 0.22), transparent 34%),
-        radial-gradient(circle at 78% 18%, rgba(133, 44, 93, 0.18), transparent 38%),
-        radial-gradient(circle at 54% 88%, rgba(82, 43, 64, 0.26), transparent 42%),
-        linear-gradient(135deg, #33252d 0%, #332c30 56%, #522b40 100%);
+        radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.08), transparent 34%),
+        radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.05), transparent 38%),
+        radial-gradient(circle at 52% 88%, rgba(255, 255, 255, 0.04), transparent 42%),
+        linear-gradient(135deg, #050505 0%, #0f0f0f 56%, #1a1a1a 100%);
 }
 
 @keyframes pageExpand {

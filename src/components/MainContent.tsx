@@ -186,12 +186,12 @@ function MainContent() {
         <section
           aria-modal="true"
           role="dialog"
-          className={`fixed inset-0 z-50 grid min-h-screen bg-[rgba(51,37,45,0.96)] p-4 text-[var(--text)] transition duration-[120ms] ease-out sm:p-6 ${
+          className={`fixed inset-0 z-50 grid min-h-screen bg-[rgba(0,0,0,0.96)] p-4 text-[var(--text)] transition duration-[120ms] ease-out sm:p-6 ${
             isDetailVisible ? "opacity-100" : "opacity-0"
           }`}
         >
           <div
-            className={`flex min-h-0 flex-col rounded-xl border border-[rgba(183,24,112,0.32)] bg-[var(--surface-strong)] shadow-[var(--shadow)] transition duration-[120ms] ease-out ${
+            className={`flex min-h-0 flex-col rounded-xl border border-[rgba(255,255,255,0.18)] bg-[var(--surface-strong)] shadow-[var(--shadow)] transition duration-[120ms] ease-out ${
               isDetailVisible ? "scale-100" : "scale-[0.985]"
             }`}
           >
@@ -202,14 +202,14 @@ function MainContent() {
               <button
                 type="button"
                 onClick={() => window.history.back()}
-                className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-h)] transition hover:bg-[var(--accent-soft)] focus:outline-none focus:ring-2 focus:ring-[rgba(183,24,112,0.28)]"
+                className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-h)] transition hover:bg-[var(--accent-soft)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.18)]"
               >
                 Close
               </button>
             </div>
 
             <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 sm:grid-cols-[minmax(220px,360px)_1fr] sm:p-6">
-              <div className="aspect-square overflow-hidden rounded-xl border border-[rgba(183,24,112,0.24)] bg-[radial-gradient(circle_at_30%_20%,rgba(183,24,112,0.55),transparent_36%),linear-gradient(135deg,#852C5D,#522B40_52%,#33252D)]">
+              <div className="aspect-square overflow-hidden rounded-xl border border-[rgba(255,255,255,0.16)] bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.16),transparent_36%),linear-gradient(135deg,#2a2a2a,#171717_52%,#050505)]">
                 {activeGame.imageUrl && (
                   <img
                     src={activeGame.imageUrl}
@@ -228,19 +228,19 @@ function MainContent() {
                 </p>
 
                 {detailErrorMessage && (
-                  <p className="rounded-lg border border-[rgba(183,24,112,0.32)] bg-[rgba(183,24,112,0.12)] p-3 text-sm text-[var(--text-muted)]">
+                  <p className="rounded-lg border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.06)] p-3 text-sm text-[var(--text-muted)]">
                     {detailErrorMessage}
                   </p>
                 )}
 
                 <dl className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-lg border border-[var(--border)] bg-[rgba(51,44,48,0.62)] p-3">
+                  <div className="rounded-lg border border-[var(--border)] bg-[rgba(12,12,12,0.72)] p-3">
                     <dt className="text-sm text-[var(--text-muted)]">Price</dt>
                     <dd className="font-semibold text-[var(--text-h)]">
                       {priceLabel}
                     </dd>
                   </div>
-                  <div className="rounded-lg border border-[var(--border)] bg-[rgba(51,44,48,0.62)] p-3">
+                  <div className="rounded-lg border border-[var(--border)] bg-[rgba(12,12,12,0.72)] p-3">
                     <dt className="text-sm text-[var(--text-muted)]">
                       Released
                     </dt>
@@ -248,7 +248,7 @@ function MainContent() {
                       {gameDetail?.released ?? "TBD"}
                     </dd>
                   </div>
-                  <div className="rounded-lg border border-[var(--border)] bg-[rgba(51,44,48,0.62)] p-3">
+                  <div className="rounded-lg border border-[var(--border)] bg-[rgba(12,12,12,0.72)] p-3">
                     <dt className="text-sm text-[var(--text-muted)]">
                       Rating
                     </dt>
@@ -256,7 +256,7 @@ function MainContent() {
                       {gameDetail?.rating ? `${gameDetail.rating}/5` : "TBD"}
                     </dd>
                   </div>
-                  <div className="rounded-lg border border-[var(--border)] bg-[rgba(51,44,48,0.62)] p-3">
+                  <div className="rounded-lg border border-[var(--border)] bg-[rgba(12,12,12,0.72)] p-3">
                     <dt className="text-sm text-[var(--text-muted)]">
                       Steam App ID
                     </dt>
@@ -274,7 +274,7 @@ function MainContent() {
                     {galleryImageUrls.map((imageUrl) => (
                       <div
                         key={imageUrl}
-                        className="aspect-video overflow-hidden rounded-lg border border-[var(--border)] bg-[rgba(51,44,48,0.62)]"
+                        className="aspect-video overflow-hidden rounded-lg border border-[var(--border)] bg-[rgba(12,12,12,0.72)]"
                       >
                         <img
                           src={imageUrl}

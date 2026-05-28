@@ -7,7 +7,7 @@ function Header() {
       <input
         type="text"
         placeholder="Search games..."
-        className="w-full rounded-lg border border-[var(--border)] bg-[rgba(51,44,48,0.72)] px-3 py-2 text-[var(--text-h)] placeholder:text-[var(--text-muted)] outline-none transition focus:border-[#B71870] focus:ring-2 focus:ring-[rgba(183,24,112,0.22)] sm:w-64"
+        className="w-full rounded-lg border border-[var(--border)] bg-[rgba(12,12,12,0.82)] px-3 py-2 text-[var(--text-h)] placeholder:text-[var(--text-muted)] outline-none transition focus:border-[rgba(255,255,255,0.44)] focus:ring-2 focus:ring-[rgba(255,255,255,0.16)] sm:w-64"
       />
     </header>
   );
