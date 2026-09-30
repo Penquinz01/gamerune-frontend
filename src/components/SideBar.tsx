@@ -1,7 +1,40 @@
-function Sidebar() {
+import type { View } from "../App";
+import { useAuth } from "../lib/useAuth";
+
+interface Props {
+  view: View;
+  onViewChange: (view: View) => void;
+}
+
+function Sidebar({ view, onViewChange }: Props) {
+  const { user } = useAuth();
+
   return (
     <aside className="w-full border-b border-[var(--border)] bg-[var(--surface)] p-4 backdrop-blur md:w-60 md:min-h-[calc(100vh-4rem)] md:border-b-0 md:border-r">
-      <h2 className="font-semibold mb-4 text-[var(--text-h)]">Filters</h2>
+      <h2 className="font-semibold mb-4 text-[var(--text-h)]">Library</h2>
+
+      <div className="flex gap-2 overflow-x-auto md:flex-col md:overflow-visible">
+        <button
+          type="button"
+          onClick={() => onViewChange("browse")}
+          className={`shrink-0 rounded p-2 text-left transition hover:bg-[var(--accent-soft)] hover:text-[var(--text-h)] ${
+            view === "browse" ? "text-[var(--text-h)] font-semibold" : "text-[var(--text)]"
+          }`}
+        >
+          Browse
+        </button>
+        <button
+          type="button"
+          onClick={() => onViewChange("wishlist")}
+          className={`shrink-0 rounded p-2 text-left transition hover:bg-[var(--accent-soft)] hover:text-[var(--text-h)] ${
+            view === "wishlist" ? "text-[var(--text-h)] font-semibold" : "text-[var(--text)]"
+          }`}
+        >
+          Wishlist{user ? "" : " (login)"}
+        </button>
+      </div>
+
+      <h2 className="font-semibold mb-4 mt-6 text-[var(--text-h)]">Filters</h2>
 
       <div className="flex gap-2 overflow-x-auto md:flex-col md:overflow-visible">
         <button className="shrink-0 rounded p-2 text-left text-[var(--text)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--text-h)]">

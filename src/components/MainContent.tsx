@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import GameCard from "./GameCard";
+import PriceAlertForm from "./PriceAlertForm";
+import PriceHistory from "./PriceHistory";
+import Reviews from "./Reviews";
 import { fetchGameDetail, fetchGamesPage } from "../lib/gamesApi";
+import { fetchFavorites, removeFavorite, upsertFavorite } from "../lib/accountApi";
+import { useAuth } from "../lib/useAuth";
 import {
   readGameDetailCache,
   readGamesCache,
@@ -14,7 +19,8 @@ const PAGE_SIZE = 20;
 
 const getInitialGames = () => readGamesCache(FIRST_PAGE, PAGE_SIZE) ?? [];
 
-function MainContent() {
+function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
+  const { user } = useAuth();
   const [games, setGames] = useState<Game[]>(getInitialGames);
   const [isLoading, setIsLoading] = useState(() => getInitialGames().length === 0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -24,6 +30,25 @@ function MainContent() {
   const [detailErrorMessage, setDetailErrorMessage] = useState<string | null>(null);
   const [isDetailVisible, setIsDetailVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [wishlistIds, setWishlistIds] = useState<Set<number>>(new Set());
+  const [wishlistMessage, setWishlistMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    let active = true;
+    fetchFavorites("wishlist")
+      .then((items) => {
+        if (active) {
+          setWishlistIds(new Set(items.map((item) => item.game.rawgId)));
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   const closeExpandedGame = () => {
     setIsDetailVisible(false);
@@ -35,8 +60,41 @@ function MainContent() {
     setGameDetail(null);
     setIsDetailLoading(true);
     setDetailErrorMessage(null);
+    setWishlistMessage(null);
     setSelectedImageIndex(0);
     window.history.pushState({ expandedGameId: game.id }, "", window.location.href);
+  };
+
+  const activeRawgId = expandedGame ? Number(expandedGame.id) : NaN;
+  const isWishlisted =
+    Boolean(user) && Number.isFinite(activeRawgId) && wishlistIds.has(activeRawgId);
+
+  const toggleWishlist = async () => {
+    if (!user) {
+      onRequireAuth();
+      return;
+    }
+    if (!Number.isFinite(activeRawgId)) {
+      setWishlistMessage("This game has no numeric RAWG id, cannot wishlist it.");
+      return;
+    }
+    try {
+      if (isWishlisted) {
+        await removeFavorite(activeRawgId);
+        setWishlistIds((current) => {
+          const next = new Set(current);
+          next.delete(activeRawgId);
+          return next;
+        });
+        setWishlistMessage("Removed from wishlist.");
+      } else {
+        await upsertFavorite(activeRawgId, "wishlist");
+        setWishlistIds((current) => new Set(current).add(activeRawgId));
+        setWishlistMessage("Added to wishlist.");
+      }
+    } catch (error) {
+      setWishlistMessage(error instanceof Error ? error.message : "Wishlist update failed.");
+    }
   };
 
   useEffect(() => {
@@ -339,6 +397,46 @@ function MainContent() {
                     </dd>
                   </div>
                 </dl>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void toggleWishlist()}
+                    className={`rounded-lg px-3 py-2 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.18)] ${
+                      isWishlisted
+                        ? "border border-[var(--border)] text-[var(--text-h)] hover:bg-[var(--accent-soft)]"
+                        : "bg-white text-black hover:bg-gray-200"
+                    }`}
+                  >
+                    {isWishlisted ? "★ Wishlisted" : "☆ Add to wishlist"}
+                  </button>
+                  {wishlistMessage && (
+                    <p className="text-sm text-[var(--text-muted)]">{wishlistMessage}</p>
+                  )}
+                </div>
+                {expandedGame && (
+                  <div className="grid gap-3">
+                    <h3 className="text-base font-semibold text-[var(--text-h)]">
+                      Price history
+                    </h3>
+                    <PriceHistory gameId={expandedGame.id} />
+                  </div>
+                )}
+                {expandedGame && (
+                  <div className="grid gap-3">
+                    <h3 className="text-base font-semibold text-[var(--text-h)]">
+                      Price alert
+                    </h3>
+                    <PriceAlertForm gameId={expandedGame.id} onRequireAuth={onRequireAuth} />
+                  </div>
+                )}
+                {expandedGame && (
+                  <div className="grid gap-3">
+                    <h3 className="text-base font-semibold text-[var(--text-h)]">
+                      Reviews
+                    </h3>
+                    <Reviews gameId={expandedGame.id} onRequireAuth={onRequireAuth} />
+                  </div>
+                )}
                 <div className="grid gap-3">
                   <h3 className="text-base font-semibold text-[var(--text-h)]">
                     Image gallery

@@ -14,6 +14,14 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_BACKEND_BASE_URL,
           changeOrigin: true,
         },
+        "/auth": {
+          target: env.VITE_BACKEND_BASE_URL,
+          changeOrigin: true,
+        },
+        "/me": {
+          target: env.VITE_BACKEND_BASE_URL,
+          changeOrigin: true,
+        },
       },
     },
   };
