@@ -48,6 +48,20 @@ interface BackendGamesResponse {
   games?: BackendGame[];
   results?: BackendGame[];
   data?: BackendGame[];
+  count?: number;
+  totalPages?: number;
+  total_pages?: number;
+  hasNext?: boolean;
+  has_next?: boolean;
+  hasPrevious?: boolean;
+  has_previous?: boolean;
+}
+
+export interface GamesPage {
+  games: Game[];
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 const normalizeGamesResponse = (response: BackendGamesResponse | BackendGame[]) => {
@@ -135,7 +149,7 @@ const normalizeImageList = (game: BackendGame) => {
   return [...uniqueImageUrls];
 };
 
-export const fetchGamesPage = async (page: number, pageSize: number) => {
+export const fetchGamesPage = async (page: number, pageSize: number): Promise<GamesPage> => {
   const url = new URL(gamesEndpoint, getBaseUrl());
   url.searchParams.set("page", String(page));
   url.searchParams.set("pageSize", String(pageSize));
@@ -149,13 +163,32 @@ export const fetchGamesPage = async (page: number, pageSize: number) => {
 
   const gamesResponse = (await response.json()) as BackendGamesResponse | BackendGame[];
 
-  return normalizeGamesResponse(gamesResponse)
+  const items = normalizeGamesResponse(gamesResponse)
     .slice(0, pageSize)
     .map<Game>((game, index) => ({
       id: String(game.id ?? `${page}-${index}`),
       name: game.name ?? game.title ?? "Untitled game",
       imageUrl: getImageUrl(game),
     }));
+
+  if (Array.isArray(gamesResponse)) {
+    return {
+      games: items,
+      totalPages: items.length >= pageSize ? page + 1 : page,
+      hasNext: items.length >= pageSize,
+      hasPrevious: page > 1,
+    };
+  }
+
+  const totalPages =
+    gamesResponse.totalPages ?? gamesResponse.total_pages ?? (items.length >= pageSize ? page + 1 : page);
+
+  return {
+    games: items,
+    totalPages,
+    hasNext: gamesResponse.hasNext ?? gamesResponse.has_next ?? items.length >= pageSize,
+    hasPrevious: gamesResponse.hasPrevious ?? gamesResponse.has_previous ?? page > 1,
+  };
 };
 
 export const fetchGameDetail = async (gameId: string) => {

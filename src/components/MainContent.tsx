@@ -17,12 +17,16 @@ import type { Game, GameDetail } from "../types/game";
 const FIRST_PAGE = 1;
 const PAGE_SIZE = 20;
 
-const getInitialGames = () => readGamesCache(FIRST_PAGE, PAGE_SIZE) ?? [];
+const getInitialPage = () => readGamesCache(FIRST_PAGE, PAGE_SIZE);
 
 function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
   const { user } = useAuth();
-  const [games, setGames] = useState<Game[]>(getInitialGames);
-  const [isLoading, setIsLoading] = useState(() => getInitialGames().length === 0);
+  const [page, setPage] = useState(FIRST_PAGE);
+  const [loadedPage, setLoadedPage] = useState(() => (getInitialPage() ? FIRST_PAGE : 0));
+  const [games, setGames] = useState<Game[]>(() => getInitialPage()?.games ?? []);
+  const [totalPages, setTotalPages] = useState(() => getInitialPage()?.totalPages ?? 1);
+  const [hasNext, setHasNext] = useState(() => (getInitialPage()?.games.length ?? 0) >= PAGE_SIZE);
+  const [isLoading, setIsLoading] = useState(() => !getInitialPage());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [expandedGame, setExpandedGame] = useState<Game | null>(null);
   const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
@@ -98,28 +102,67 @@ function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
   };
 
   useEffect(() => {
-    if (games.length > 0) {
+    if (loadedPage === page) {
       return;
     }
 
+    let active = true;
+
     const loadGames = async () => {
       try {
-        const fetchedGames = await fetchGamesPage(FIRST_PAGE, PAGE_SIZE);
-        setGames(fetchedGames);
+        const result = await fetchGamesPage(page, PAGE_SIZE);
+        if (!active) {
+          return;
+        }
+        setGames(result.games);
+        setTotalPages(result.totalPages);
+        setHasNext(result.hasNext);
+        setLoadedPage(page);
         setErrorMessage(null);
-        writeGamesCache(FIRST_PAGE, PAGE_SIZE, fetchedGames);
+        writeGamesCache(page, PAGE_SIZE, result.games, result.totalPages);
       } catch (error) {
+        if (!active) {
+          return;
+        }
         setGames([]);
         setErrorMessage(
           error instanceof Error ? error.message : "Failed to fetch games",
         );
       } finally {
-        setIsLoading(false);
+        if (active) {
+          setIsLoading(false);
+        }
       }
     };
 
     void loadGames();
-  }, [games.length]);
+
+    return () => {
+      active = false;
+    };
+  }, [loadedPage, page]);
+
+  const goToPage = (nextPage: number) => {
+    const target = Math.max(FIRST_PAGE, nextPage);
+    if (target === page) {
+      return;
+    }
+    const cached = readGamesCache(target, PAGE_SIZE);
+    if (cached) {
+      setGames(cached.games);
+      setTotalPages(cached.totalPages);
+      setHasNext(cached.games.length >= PAGE_SIZE);
+      setLoadedPage(target);
+      setPage(target);
+      setErrorMessage(null);
+      setIsLoading(false);
+    } else {
+      setPage(target);
+      setIsLoading(true);
+      setErrorMessage(null);
+    }
+    window.scrollTo({ top: 0 });
+  };
 
   useEffect(() => {
     if (!expandedGame) {
@@ -227,6 +270,14 @@ function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
     );
   };
 
+  const pageNumbers = () => {
+    const last = Math.max(totalPages, page);
+    const wanted = new Set([1, last, page - 1, page, page + 1]);
+    return [...wanted]
+      .filter((value) => value >= 1 && value <= last)
+      .sort((a, b) => a - b);
+  };
+
   return (
     <>
       <main className="grid flex-1 auto-rows-min grid-cols-2 gap-3 p-4 sm:grid-cols-3 sm:gap-4 sm:p-6 lg:grid-cols-5">
@@ -258,6 +309,52 @@ function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
               )}
             </div>
           </div>
+        )}
+        {(games.length > 0 || page > FIRST_PAGE) && (
+          <nav
+            aria-label="Games pages"
+            className="col-span-full flex flex-wrap items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] p-3 shadow-[var(--shadow)]"
+          >
+            <button
+              type="button"
+              onClick={() => goToPage(page - 1)}
+              disabled={page <= FIRST_PAGE || isLoading}
+              className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-h)] transition hover:bg-[var(--accent-soft)] disabled:opacity-40"
+            >
+              Previous
+            </button>
+            {pageNumbers().map((value, index, values) => (
+              <span key={value} className="flex items-center gap-2">
+                {index > 0 && values[index - 1] < value - 1 && (
+                  <span className="text-sm text-[var(--text-muted)]">…</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => goToPage(value)}
+                  disabled={isLoading}
+                  aria-current={value === page ? "page" : undefined}
+                  className={`min-w-9 rounded-lg px-2 py-1.5 text-sm font-semibold transition disabled:opacity-40 ${
+                    value === page
+                      ? "bg-white text-black"
+                      : "border border-[var(--border)] text-[var(--text-h)] hover:bg-[var(--accent-soft)]"
+                  }`}
+                >
+                  {value}
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={() => goToPage(page + 1)}
+              disabled={!hasNext || isLoading}
+              className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-h)] transition hover:bg-[var(--accent-soft)] disabled:opacity-40"
+            >
+              Next
+            </button>
+            {isLoading && (
+              <span className="text-sm text-[var(--text-muted)]">Loading…</span>
+            )}
+          </nav>
         )}
       </main>
 
