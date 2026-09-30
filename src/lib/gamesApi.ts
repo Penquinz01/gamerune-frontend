@@ -149,11 +149,18 @@ const normalizeImageList = (game: BackendGame) => {
   return [...uniqueImageUrls];
 };
 
-export const fetchGamesPage = async (page: number, pageSize: number): Promise<GamesPage> => {
+export const fetchGamesPage = async (
+  page: number,
+  pageSize: number,
+  search = "",
+): Promise<GamesPage> => {
   const url = new URL(gamesEndpoint, getBaseUrl());
   url.searchParams.set("page", String(page));
   url.searchParams.set("pageSize", String(pageSize));
   url.searchParams.set("page_size", String(pageSize));
+  if (search.trim()) {
+    url.searchParams.set("search", search.trim());
+  }
 
   const response = await fetch(url);
 

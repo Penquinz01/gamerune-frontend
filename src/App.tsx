@@ -12,19 +12,31 @@ export type View = "browse" | "wishlist";
 function App() {
   const [view, setView] = useState<View>("browse");
   const [authOpen, setAuthOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setView("browse");
+  };
 
   return (
     <AuthProvider>
       <div className="app-shell min-h-screen text-[var(--text)]">
         <Header
           view={view}
+          searchQuery={searchQuery}
           onViewChange={setView}
+          onSearch={handleSearch}
           onAuthClick={() => setAuthOpen(true)}
         />
         <div className="flex min-w-0 flex-col md:flex-row">
           <Sidebar view={view} onViewChange={setView} />
           {view === "browse" ? (
-            <MainContent onRequireAuth={() => setAuthOpen(true)} />
+            <MainContent
+              key={searchQuery}
+              searchQuery={searchQuery}
+              onRequireAuth={() => setAuthOpen(true)}
+            />
           ) : (
             <WishlistView onRequireAuth={() => setAuthOpen(true)} />
           )}

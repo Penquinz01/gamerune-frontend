@@ -17,16 +17,23 @@ import type { Game, GameDetail } from "../types/game";
 const FIRST_PAGE = 1;
 const PAGE_SIZE = 20;
 
-const getInitialPage = () => readGamesCache(FIRST_PAGE, PAGE_SIZE);
+const getInitialPage = (query: string) => readGamesCache(FIRST_PAGE, PAGE_SIZE, query);
 
-function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
+interface Props {
+  searchQuery: string;
+  onRequireAuth: () => void;
+}
+
+function MainContent({ searchQuery, onRequireAuth }: Props) {
   const { user } = useAuth();
   const [page, setPage] = useState(FIRST_PAGE);
-  const [loadedPage, setLoadedPage] = useState(() => (getInitialPage() ? FIRST_PAGE : 0));
-  const [games, setGames] = useState<Game[]>(() => getInitialPage()?.games ?? []);
-  const [totalPages, setTotalPages] = useState(() => getInitialPage()?.totalPages ?? 1);
-  const [hasNext, setHasNext] = useState(() => (getInitialPage()?.games.length ?? 0) >= PAGE_SIZE);
-  const [isLoading, setIsLoading] = useState(() => !getInitialPage());
+  const [loadedPage, setLoadedPage] = useState(() => (getInitialPage(searchQuery) ? FIRST_PAGE : 0));
+  const [games, setGames] = useState<Game[]>(() => getInitialPage(searchQuery)?.games ?? []);
+  const [totalPages, setTotalPages] = useState(() => getInitialPage(searchQuery)?.totalPages ?? 1);
+  const [hasNext, setHasNext] = useState(
+    () => (getInitialPage(searchQuery)?.games.length ?? 0) >= PAGE_SIZE,
+  );
+  const [isLoading, setIsLoading] = useState(() => !getInitialPage(searchQuery));
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [expandedGame, setExpandedGame] = useState<Game | null>(null);
   const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
@@ -110,7 +117,7 @@ function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
 
     const loadGames = async () => {
       try {
-        const result = await fetchGamesPage(page, PAGE_SIZE);
+        const result = await fetchGamesPage(page, PAGE_SIZE, searchQuery);
         if (!active) {
           return;
         }
@@ -119,7 +126,7 @@ function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
         setHasNext(result.hasNext);
         setLoadedPage(page);
         setErrorMessage(null);
-        writeGamesCache(page, PAGE_SIZE, result.games, result.totalPages);
+        writeGamesCache(page, PAGE_SIZE, result.games, result.totalPages, searchQuery);
       } catch (error) {
         if (!active) {
           return;
@@ -140,14 +147,15 @@ function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
     return () => {
       active = false;
     };
-  }, [loadedPage, page]);
+    // searchQuery is constant for the lifetime of this mount (App remounts per query).
+  }, [loadedPage, page, searchQuery]);
 
   const goToPage = (nextPage: number) => {
     const target = Math.max(FIRST_PAGE, nextPage);
     if (target === page) {
       return;
     }
-    const cached = readGamesCache(target, PAGE_SIZE);
+    const cached = readGamesCache(target, PAGE_SIZE, searchQuery);
     if (cached) {
       setGames(cached.games);
       setTotalPages(cached.totalPages);
@@ -281,6 +289,11 @@ function MainContent({ onRequireAuth }: { onRequireAuth: () => void }) {
   return (
     <>
       <main className="grid flex-1 auto-rows-min grid-cols-2 gap-3 p-4 sm:grid-cols-3 sm:gap-4 sm:p-6 lg:grid-cols-5">
+        {searchQuery && (
+          <p className="col-span-full text-sm text-[var(--text-muted)]">
+            Results for <span className="font-semibold text-[var(--text-h)]">“{searchQuery}”</span>
+          </p>
+        )}
         {games.length > 0 ? (
           games.map((game) => (
             <GameCard

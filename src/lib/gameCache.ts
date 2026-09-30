@@ -18,16 +18,20 @@ interface GameDetailCacheEntry {
   detail: GameDetail;
 }
 
-const getCacheKey = (page: number, pageSize: number) =>
-  `game-lister:games:page-${page}:size-${pageSize}`;
+const getCacheKey = (page: number, pageSize: number, search = "") =>
+  `game-lister:games:q-${search.trim().toLowerCase()}:page-${page}:size-${pageSize}`;
 
 export interface CachedGamesPage {
   games: Game[];
   totalPages: number;
 }
 
-export const readGamesCache = (page: number, pageSize: number): CachedGamesPage | null => {
-  const cachedValue = localStorage.getItem(getCacheKey(page, pageSize));
+export const readGamesCache = (
+  page: number,
+  pageSize: number,
+  search = "",
+): CachedGamesPage | null => {
+  const cachedValue = localStorage.getItem(getCacheKey(page, pageSize, search));
 
   if (!cachedValue) {
     return null;
@@ -41,7 +45,7 @@ export const readGamesCache = (page: number, pageSize: number): CachedGamesPage 
       ? { games: cachedEntry.games, totalPages: cachedEntry.totalPages ?? 1 }
       : null;
   } catch {
-    localStorage.removeItem(getCacheKey(page, pageSize));
+    localStorage.removeItem(getCacheKey(page, pageSize, search));
     return null;
   }
 };
@@ -51,6 +55,7 @@ export const writeGamesCache = (
   pageSize: number,
   games: Game[],
   totalPages: number,
+  search = "",
 ) => {
   const cacheEntry: GamesCacheEntry = {
     savedAt: Date.now(),
@@ -58,7 +63,7 @@ export const writeGamesCache = (
     totalPages,
   };
 
-  localStorage.setItem(getCacheKey(page, pageSize), JSON.stringify(cacheEntry));
+  localStorage.setItem(getCacheKey(page, pageSize, search), JSON.stringify(cacheEntry));
 };
 
 const readDetailsCacheEntries = () => {

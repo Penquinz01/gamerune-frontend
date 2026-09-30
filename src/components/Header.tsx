@@ -1,14 +1,29 @@
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { useAuth } from "../lib/useAuth";
 import type { View } from "../App";
 
 interface Props {
   view: View;
+  searchQuery: string;
   onViewChange: (view: View) => void;
+  onSearch: (query: string) => void;
   onAuthClick: () => void;
 }
 
-function Header({ view, onViewChange, onAuthClick }: Props) {
+function Header({ view, searchQuery, onViewChange, onSearch, onAuthClick }: Props) {
   const { user, logout } = useAuth();
+  const [draft, setDraft] = useState(searchQuery);
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    onSearch(draft.trim());
+  };
+
+  const handleClear = () => {
+    setDraft("");
+    onSearch("");
+  };
 
   return (
     <header className="min-h-16 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3 flex flex-col gap-3 shadow-[var(--shadow)] backdrop-blur sm:px-6 sm:flex-row sm:items-center sm:justify-between">
@@ -34,11 +49,27 @@ function Header({ view, onViewChange, onAuthClick }: Props) {
         </nav>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input
-          type="text"
-          placeholder="Search games..."
-          className="w-full rounded-lg border border-[var(--border)] bg-[rgba(12,12,12,0.82)] px-3 py-2 text-[var(--text-h)] placeholder:text-[var(--text-muted)] outline-none transition focus:border-[rgba(255,255,255,0.44)] focus:ring-2 focus:ring-[rgba(255,255,255,0.16)] sm:w-64"
-        />
+        <form onSubmit={handleSubmit} role="search" className="flex w-full gap-2 sm:w-auto">
+          <input
+            type="search"
+            placeholder="Search games..."
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            aria-label="Search games"
+            className="w-full rounded-lg border border-[var(--border)] bg-[rgba(12,12,12,0.82)] px-3 py-2 text-[var(--text-h)] placeholder:text-[var(--text-muted)] outline-none transition focus:border-[rgba(255,255,255,0.44)] focus:ring-2 focus:ring-[rgba(255,255,255,0.16)] sm:w-64"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClear}
+              aria-label="Clear search"
+              title="Clear search"
+              className="shrink-0 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-muted)] transition hover:text-[var(--text-h)]"
+            >
+              ×
+            </button>
+          )}
+        </form>
         {user ? (
           <div className="flex items-center gap-2">
             <span className="truncate text-sm text-[var(--text-muted)]" title={user.email}>
